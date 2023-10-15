@@ -3,7 +3,7 @@ import { serializeError } from 'serialize-error';
 import type { IpcMain, IpcRenderer, WebContents, IpcMainEvent, IpcRendererEvent } from 'electron';
 import 'object.entries/auto'; // Shim Object.entries. Required to use serializeError.
 
-type IpcEvent = IpcRendererEvent & IpcMainEvent;
+type IpcEvent = IpcRendererEvent | IpcMainEvent;
 
 /**
  * For backwards compatibility, event is the (optional) LAST argument to a listener function.
@@ -41,7 +41,7 @@ type WrappedListener = { (event: IpcEvent, replyChannel: string, ...dataArgs: an
 export default class PromiseIpcBase {
   private eventEmitter: IpcMain | IpcRenderer;
 
-  private maxTimeoutMs: number;
+  private maxTimeoutMs: number | undefined;
 
   private routeListenerMap: Map<string, Listener>;
 
@@ -122,12 +122,14 @@ export default class PromiseIpcBase {
 
   public off(route: string, listener?: Listener): void {
     const registeredListener = this.routeListenerMap.get(route);
-    if (listener && listener !== registeredListener) {
+    if (!listener || listener !== registeredListener) {
       return; // trying to remove the wrong listener, so do nothing.
     }
-    const wrappedListener = this.listenerMap.get(registeredListener);
-    this.eventEmitter.removeListener(route, wrappedListener);
-    this.listenerMap.delete(registeredListener);
+    const wrappedListener = this.listenerMap.get(listener);
+    if (wrappedListener) {
+      this.eventEmitter.removeListener(route, wrappedListener);
+    }
+    this.listenerMap.delete(listener);
     this.routeListenerMap.delete(route);
   }
 
