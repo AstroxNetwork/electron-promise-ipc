@@ -3,7 +3,7 @@ import { serializeError } from 'serialize-error';
 import type { IpcMain, IpcRenderer, WebContents, IpcMainEvent, IpcRendererEvent } from 'electron';
 import 'object.entries/auto'; // Shim Object.entries. Required to use serializeError.
 
-type IpcEvent = IpcRendererEvent | IpcMainEvent;
+type IpcEvent = IpcRendererEvent & IpcMainEvent;
 
 /**
  * For backwards compatibility, event is the (optional) LAST argument to a listener function.
