@@ -36,12 +36,14 @@ export type Listener =
 export type Options = { maxTimeoutMs?: number };
 // There's an `any` here it's the only way that the typescript compiler allows you to call listener(...dataArgs, event).
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type WrappedListener = { (event: IpcEvent, replyChannel: string, ...dataArgs: any[]): void };
+type WrappedListener = {
+  (event: IpcMainEvent | IpcRendererEvent, replyChannel: string, ...dataArgs: any[]): void
+};
 
 export default class PromiseIpcBase {
   private eventEmitter: IpcMain | IpcRenderer;
 
-  private maxTimeoutMs: number | undefined;
+  private maxTimeoutMs?: number;
 
   private routeListenerMap: Map<string, Listener>;
 
@@ -102,7 +104,11 @@ export default class PromiseIpcBase {
     if (this.routeListenerMap.has(route)) {
       this.off(route, prevListener);
     } // This function _wraps_ the listener argument. We maintain a map of // listener -> wrapped listener in order to implement #off().
-    const wrappedListener: WrappedListener = (event, replyChannel, ...dataArgs): void => {
+    const wrappedListener: WrappedListener = (
+      event: IpcMainEvent | IpcRendererEvent,
+      replyChannel,
+      ...dataArgs
+    ): void => {
       // Chaining off of Promise.resolve() means that listener can return a promise, or return
       // synchronously -- it can even throw. The end result will still be handled promise-like.
       Promise.resolve()
