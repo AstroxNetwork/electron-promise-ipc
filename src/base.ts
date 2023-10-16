@@ -69,7 +69,7 @@ export default class PromiseIpcBase {
 
       this.eventEmitter.once(
         replyChannel,
-        (event: IpcEvent, status: string, returnData: unknown) => {
+        (event: IpcMainEvent | IpcRendererEvent, status: string, returnData: unknown) => {
           clearTimeout(timeout);
           if (didTimeOut) {
             return null;
